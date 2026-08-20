@@ -7,8 +7,13 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// public 폴더 위치 설정 (server 폴더 기준 한 칸 위로 나가서 찾기)
-app.use(express.static(path.join(__dirname, '../public')));
+// 1. 깃허브 최상위 폴더에 있는 index.html을 첫 화면으로 연결
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// 2. CSS, 이미지, 자바스크립트 등 정적 파일 폴더 설정
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
 // 실시간 멀티플레이(소켓) 로직
