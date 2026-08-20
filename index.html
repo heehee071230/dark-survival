@@ -2,110 +2,634 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>다크 서바이벌 - 계정 연동 멀티</title>
     <style>
-        /* 모바일 화면에서 여백 없이 꽉 차게 설정 */
-        html, body {
+        body {
             margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
             background-color: #0b0b0b;
             color: #fff;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
             overflow: hidden;
             touch-action: none;
-            -webkit-user-select: none;
-            user-select: none;
         }
-
         h2 {
-            margin: 10px 0;
+            margin: 5px;
             color: #ff4444;
-            font-size: 24px;
             text-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
         }
-
-        p {
-            font-size: 14px;
-            color: #aaa;
-            margin-bottom: 20px;
-        }
-
+        
         .box-container {
             background: #1a1a1a;
-            padding: 25px 20px;
+            padding: 25px;
             border: 2px solid #ff4444;
-            border-radius: 12px;
+            border-radius: 10px;
             text-align: center;
             box-shadow: 0 0 20px rgba(255, 68, 68, 0.3);
-            width: 85%;
-            max-width: 320px;
+            width: 90%;
+            max-width: 330px;
             box-sizing: border-box;
         }
 
-        button {
+        #introScreen, #loginScreen, #settingsModal {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(10, 10, 10, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        #loginScreen, #settingsModal { display: none; }
+
+        .intro-btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
             width: 100%;
-            padding: 12px;
-            margin: 8px 0;
+            margin-top: 20px;
+        }
+
+        .input-row { display: flex; gap: 5px; margin-bottom: 8px; }
+        input {
+            flex: 1;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #444;
+            background: #222;
+            color: #fff;
+            border-radius: 5px;
+        }
+        .full-input {
+            width: 100%;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #444;
+            background: #222;
+            color: #fff;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            box-sizing: border-box;
+        }
+        .show-pw-container {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 5px;
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        .show-pw-container input { cursor: pointer; flex: none; }
+
+        .btn-group { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+        button {
+            padding: 12px 15px;
+            font-size: 14px;
             background-color: #ff4444;
             color: white;
             border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: bold;
+            border-radius: 5px;
             cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            transition: background 0.2s;
+            font-weight: bold;
+            width: 100%;
+        }
+        button:hover { background-color: #ff6666; }
+        .secondary-btn { background-color: #444; font-size: 12px; flex: none; width: auto; white-space: nowrap; }
+        .secondary-btn:hover { background-color: #555; }
+        .reg-mode-btn { background-color: #3388ff; }
+        .reg-mode-btn:hover { background-color: #5599ff; }
+
+        #msgStatus { font-size: 12px; margin-bottom: 8px; height: 15px; text-align: left; padding-left: 2px; }
+        .register-only { display: none; }
+
+        .setting-section {
+            background: #222;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 1px solid #444;
+            text-align: left;
         }
 
-        button:active {
-            background-color: #cc2222;
-            transform: scale(0.98);
+        /* 게임 영역 */
+        #gameContainer {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            justify-content: center;
+        }
+        #topBar {
+            width: 95%;
+            max-width: 800px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        canvas {
+            border: 2px solid #333;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
+            background-color: #151515;
+            width: 95%;
+            max-width: 800px;
+            height: 55vh;
+            border-radius: 8px;
+        }
+        #info {
+            margin-top: 5px;
+            color: #aaa;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        /* 모바일 터치 패드 안내 */
+        #touchPadInfo {
+            font-size: 11px;
+            color: #ffcc44;
+            margin-top: 5px;
+            text-align: center;
         }
 
-        .btn-secondary {
-            background-color: #333;
-            border: 1px solid #555;
+        .small-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            background-color: #444;
+            border: none;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            width: auto;
         }
-
-        .btn-secondary:active {
-            background-color: #222;
-        }
+        .small-btn:hover { background-color: #666; }
     </style>
 </head>
 <body>
 
-    <div class="box-container">
-        <h2>DARK SURVIVAL</h2>
-        <p>다크 서바이벌 멀티플레이어</p>
-        
-        <div id="status-text" style="font-size: 12px; color: #ffaa00; margin-bottom: 15px;">
-            ⚠️ 로그인되지 않음 (게스트 모드)
-        </div>
+    <!-- 1. 인트로 화면 -->
+    <div id="introScreen">
+        <div class="box-container">
+            <h2>DARK SURVIVAL</h2>
+            <p style="font-size:13px; color:#aaa; margin-bottom:20px;">다크 서바이벌 멀티플레이어</p>
+            
+            <div id="introAccountStatus" style="font-size:12px; color:#ffaa44; margin-bottom:15px; background:#222; padding:8px; border-radius:5px;">
+                ⚠️ 로그인되지 않음 (게스트 모드)
+            </div>
 
-        <button onclick="startGame()">게임 시작</button>
-        <button class="btn-secondary" onclick="openLogin()">계정 로그인</button>
-        <button class="btn-secondary" onclick="openSettings()">설정</button>
+            <div class="intro-btn-group">
+                <button id="gotoGameBtn" style="background-color:#2ecc71;">게임 시작</button>
+                <button id="gotoLoginBtn" class="reg-mode-btn">계정 로그인</button>
+                <button id="gotoSettingsBtn" style="background-color:#555;">설정</button>
+            </div>
+        </div>
     </div>
 
+    <!-- 2. 로그인 화면 -->
+    <div id="loginScreen">
+        <div class="box-container">
+            <h2>DARK SURVIVAL</h2>
+            <p id="modeTitle" style="font-size:13px; color:#aaa; margin-bottom:15px;">생존자 계정 로그인</p>
+            
+            <div class="input-row">
+                <input type="text" id="usernameInput" placeholder="아이디" maxlength="10">
+                <button id="checkDupBtn" class="secondary-btn register-only">중복확인</button>
+            </div>
+            
+            <input type="password" id="passwordInput" class="full-input" placeholder="비밀번호" maxlength="15">
+            <input type="password" id="passwordConfirmInput" class="full-input register-only" placeholder="비밀번호 확인" maxlength="15">
+            
+            <label class="show-pw-container">
+                <input type="checkbox" id="showPasswordCheckbox"> 비밀번호 보기
+            </label>
+
+            <div id="msgStatus"></div>
+
+            <div class="btn-group">
+                <button id="actionBtn">로그인</button>
+                <button id="toggleModeBtn" class="secondary-btn reg-mode-btn">회원가입 하기</button>
+            </div>
+            <button id="backToIntroFromLogin" class="secondary-btn" style="width:100%; margin-top:8px; background-color:#222;">뒤로 가기</button>
+        </div>
+    </div>
+
+    <!-- 3. 설정 창 -->
+    <div id="settingsModal">
+        <div class="box-container" style="border-color:#3388ff; max-width:340px; text-align:left;">
+            <h3 style="color:#3388ff; margin-top:0; text-align:center;">게임 설정 및 계정 센터</h3>
+            
+            <div class="setting-section">
+                <div style="font-size:12px; color:#aaa; margin-bottom:5px;">👤 계정 센터</div>
+                <div id="accountCenterInfo" style="font-size:13px; margin-bottom:8px; font-weight:bold;">로그인 정보가 없습니다.</div>
+                <div id="accountCenterButtons"></div>
+            </div>
+
+            <div class="setting-section" id="pwChangeSection">
+                <div style="font-size:12px; color:#aaa; margin-bottom:5px;">🔑 비밀번호 변경</div>
+                <input type="password" id="currentPwInput" class="full-input" placeholder="현재 비밀번호" style="margin-bottom:6px;">
+                <input type="password" id="newPwInput" class="full-input" placeholder="새 비밀번호 (4글자 이상)" style="margin-bottom:6px;">
+                <input type="password" id="newPwConfirmInput" class="full-input" placeholder="새 비밀번호 확인" style="margin-bottom:6px;">
+                
+                <label class="show-pw-container" style="justify-content:flex-start; margin-bottom:8px;">
+                    <input type="checkbox" id="showModalPwCheckbox"> 비밀번호 보기
+                </label>
+                <button id="savePwBtn" class="reg-mode-btn" style="width:100%;">비밀번호 변경하기</button>
+            </div>
+
+            <button id="closeSettingsBtn" class="secondary-btn" style="width:100%; background-color:#444;">설정 닫기</button>
+        </div>
+    </div>
+
+    <!-- 게임 플레이 화면 컨테이너 -->
+    <div id="gameContainer">
+        <div id="topBar">
+            <h2 style="margin:0; font-size:16px;">DARK SURVIVAL</h2>
+            <button id="openSettingsInGameBtn" class="small-btn">설정 (메뉴)</button>
+        </div>
+        <canvas id="gameCanvas" width="800" height="500"></canvas>
+        <div id="info">방향키 또는 W, A, S, D 이동</div>
+        <div id="touchPadInfo">💡 스마트폰: 화면을 터치하고 드래그하면 그 방향으로 이동합니다!</div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
     <script>
-        function startGame() {
-            alert("게임을 시작합니다!");
+        const socket = io();
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let myPlayer = { x: 400, y: 250, size: 18, speed: 4, color: '#44ccff', hp: 100, name: '', score: 0 };
+        let otherPlayers = {};
+        let monsters = [];
+        let keys = {};
+        let gameStarted = false;
+        let isCheckedId = false;
+        let isRegisterMode = false;
+        let loggedInUser = null;
+
+        // 터치 이동용 변수
+        let touchTarget = null;
+
+        const introScreen = document.getElementById('introScreen');
+        const loginScreen = document.getElementById('loginScreen');
+        const settingsModal = document.getElementById('settingsModal');
+        const gameContainer = document.getElementById('gameContainer');
+        
+        const introAccountStatus = document.getElementById('introAccountStatus');
+        const accountCenterInfo = document.getElementById('accountCenterInfo');
+        const accountCenterButtons = document.getElementById('accountCenterButtons');
+        const pwChangeSection = document.getElementById('pwChangeSection');
+
+        document.getElementById('gotoGameBtn').addEventListener('click', () => {
+            introScreen.style.display = 'none';
+            gameContainer.style.display = 'flex';
+
+            if (!myPlayer.name) {
+                myPlayer.name = '생존자_' + Math.floor(Math.random() * 1000);
+            }
+            gameStarted = true;
+            mainLoop();
+        });
+
+        document.getElementById('gotoLoginBtn').addEventListener('click', () => {
+            introScreen.style.display = 'none';
+            loginScreen.style.display = 'flex';
+        });
+
+        document.getElementById('gotoSettingsBtn').addEventListener('click', () => {
+            updateSettingsUI();
+            settingsModal.style.display = 'flex';
+        });
+
+        document.getElementById('backToIntroFromLogin').addEventListener('click', () => {
+            loginScreen.style.display = 'none';
+            introScreen.style.display = 'flex';
+        });
+
+        document.getElementById('openSettingsInGameBtn').addEventListener('click', () => {
+            updateSettingsUI();
+            settingsModal.style.display = 'flex';
+        });
+
+        document.getElementById('closeSettingsBtn').addEventListener('click', () => {
+            settingsModal.style.display = 'none';
+        });
+
+        function updateSettingsUI() {
+            if (loggedInUser) {
+                accountCenterInfo.style.color = '#2ecc71';
+                accountCenterInfo.innerText = `현재 계정: ${loggedInUser} (연동 완료)`;
+                accountCenterButtons.innerHTML = `<button id="logoutBtn" class="small-btn" style="background-color:#ff4444; width:100%;">로그아웃</button>`;
+                
+                document.getElementById('logoutBtn').addEventListener('click', () => {
+                    loggedInUser = null;
+                    myPlayer.name = '';
+                    introAccountStatus.style.color = '#ffaa44';
+                    introAccountStatus.innerText = '⚠️ 로그인되지 않음 (게스트 모드)';
+                    alert('로그아웃 되었습니다.');
+                    settingsModal.style.display = 'none';
+                    if (gameStarted) location.reload();
+                    else updateSettingsUI();
+                });
+                pwChangeSection.style.display = 'block';
+            } else {
+                accountCenterInfo.style.color = '#aaa';
+                accountCenterInfo.innerText = '로그인된 계정이 없습니다. (게스트로 플레이 중)';
+                accountCenterButtons.innerHTML = `<button id="goToLoginFromSetting" class="small-btn reg-mode-btn" style="width:100%;">로그인하러 가기</button>`;
+                
+                document.getElementById('goToLoginFromSetting').addEventListener('click', () => {
+                    settingsModal.style.display = 'none';
+                    introScreen.style.display = 'none';
+                    loginScreen.style.display = 'flex';
+                });
+                pwChangeSection.style.display = 'none';
+            }
         }
 
-        function openLogin() {
-            alert("로그인 기능 준비 중입니다.");
+        // 비밀번호 보기 토글
+        const showPasswordCheckbox = document.getElementById('showPasswordCheckbox');
+        const passwordInput = document.getElementById('passwordInput');
+        const passwordConfirmInput = document.getElementById('passwordConfirmInput');
+        showPasswordCheckbox.addEventListener('change', () => {
+            const type = showPasswordCheckbox.checked ? 'text' : 'password';
+            passwordInput.type = type;
+            passwordConfirmInput.type = type;
+        });
+
+        const showModalPwCheckbox = document.getElementById('showModalPwCheckbox');
+        const currentPwInput = document.getElementById('currentPwInput');
+        const newPwInput = document.getElementById('newPwInput');
+        const newPwConfirmInput = document.getElementById('newPwConfirmInput');
+        showModalPwCheckbox.addEventListener('change', () => {
+            const type = showModalPwCheckbox.checked ? 'text' : 'password';
+            currentPwInput.type = type;
+            newPwInput.type = type;
+            newPwConfirmInput.type = type;
+        });
+
+        // 로그인 / 가입 로직
+        const msgEl = document.getElementById('msgStatus');
+        const usernameInput = document.getElementById('usernameInput');
+        const actionBtn = document.getElementById('actionBtn');
+        const toggleModeBtn = document.getElementById('toggleModeBtn');
+        const modeTitle = document.getElementById('modeTitle');
+        const registerOnlyElements = document.querySelectorAll('.register-only');
+
+        toggleModeBtn.addEventListener('click', () => {
+            isRegisterMode = !isRegisterMode;
+            msgEl.innerText = '';
+            isCheckedId = false;
+
+            if (isRegisterMode) {
+                modeTitle.innerText = '신규 생존자 회원가입 (1인 1계정)';
+                actionBtn.innerText = '회원가입 완료';
+                actionBtn.style.backgroundColor = '#3388ff';
+                toggleModeBtn.innerText = '로그인으로 돌아가기';
+                registerOnlyElements.forEach(el => el.style.display = (el.tagName === 'BUTTON' ? 'inline-block' : 'block'));
+            } else {
+                modeTitle.innerText = '생존자 계정 로그인';
+                actionBtn.innerText = '로그인';
+                actionBtn.style.backgroundColor = '#ff4444';
+                toggleModeBtn.innerText = '회원가입 하기';
+                registerOnlyElements.forEach(el => el.style.display = 'none');
+            }
+        });
+
+        usernameInput.addEventListener('input', () => {
+            if (isRegisterMode) { isCheckedId = false; msgEl.innerText = ''; }
+        });
+
+        document.getElementById('checkDupBtn').addEventListener('click', async () => {
+            const username = usernameInput.value.trim();
+            if (!username) { msgEl.style.color = '#ff4444'; msgEl.innerText = '아이디를 입력해주세요!'; return; }
+
+            const res = await fetch('/api/check-duplicate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
+            });
+            const data = await res.json();
+            msgEl.style.color = data.available ? '#2ecc71' : '#ff4444';
+            msgEl.innerText = data.message;
+            isCheckedId = data.available;
+        });
+
+        actionBtn.addEventListener('click', async () => {
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            if (!username || !password) { alert('아이디와 비밀번호를 모두 입력해주세요!'); return; }
+
+            if (isRegisterMode) {
+                const passwordConfirm = passwordConfirmInput.value.trim();
+                if (!passwordConfirm) { alert('비밀번호 확인란을 입력해주세요!'); return; }
+                if (!isCheckedId) { alert('아이디 중복확인을 진행해주세요!'); return; }
+                if (password !== passwordConfirm) { msgEl.style.color = '#ff4444'; msgEl.innerText = '비밀번호가 서로 일치하지 않습니다!'; return; }
+
+                const res = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+                alert(data.message);
+                if (data.success) { toggleModeBtn.click(); usernameInput.value = username; passwordInput.value = ''; }
+            } else {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    loggedInUser = username;
+                    myPlayer.name = username;
+                    myPlayer.score = data.score || 0;
+                    introAccountStatus.style.color = '#2ecc71';
+                    introAccountStatus.innerText = `✅ 로그인됨: ${username}`;
+                    alert(`${username}님 환영합니다!`);
+                    loginScreen.style.display = 'none';
+                    introScreen.style.display = 'flex';
+                } else {
+                    alert(data.message);
+                }
+            }
+        });
+
+        document.getElementById('savePwBtn').addEventListener('click', async () => {
+            const currentPassword = currentPwInput.value.trim();
+            const newPassword = newPwInput.value.trim();
+            const newPwConfirm = newPwConfirmInput.value.trim();
+
+            if (!currentPassword || !newPassword || !newPwConfirm) { alert('모든 칸을 입력해주세요!'); return; }
+            if (newPassword !== newPwConfirm) { alert('새 비밀번호가 서로 일치하지 않습니다!'); return; }
+
+            const res = await fetch('/api/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: loggedInUser, currentPassword, newPassword })
+            });
+            const data = await res.json();
+            alert(data.message);
+            if (data.success) {
+                settingsModal.style.display = 'none';
+                currentPwInput.value = ''; newPwInput.value = ''; newPwConfirmInput.value = '';
+            }
+        });
+
+        // --- [입력 제어 (PC 키보드 + 모바일 터치 드래그)] ---
+        window.addEventListener('keydown', (e) => { if (gameStarted) keys[e.key] = true; });
+        window.addEventListener('keyup', (e) => { if (gameStarted) keys[e.key] = false; });
+
+        canvas.addEventListener('touchstart', handleTouch, { passive: false });
+        canvas.addEventListener('touchmove', handleTouch, { passive: false });
+        canvas.addEventListener('touchend', () => { touchTarget = null; }, { passive: false });
+
+        function handleTouch(e) {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            // 캔버스 내부 좌표로 변환
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            touchTarget = {
+                x: (touch.clientX - rect.left) * scaleX,
+                y: (touch.clientY - rect.top) * scaleY
+            };
         }
 
-        function openSettings() {
-            alert("설정 화면 준비 중입니다.");
+        setInterval(() => {
+            if (!gameStarted) return;
+            myPlayer.score += 1;
+            if (loggedInUser) {
+                socket.emit('saveScore', { username: myPlayer.name, score: myPlayer.score });
+            }
+
+            if (monsters.length < 12) {
+                let edge = Math.floor(Math.random() * 4);
+                let mx, my;
+                if (edge === 0) { mx = Math.random() * canvas.width; my = -20; }
+                else if (edge === 1) { mx = Math.random() * canvas.width; my = canvas.height + 20; }
+                else if (edge === 2) { mx = -20; my = Math.random() * canvas.height; }
+                else { mx = canvas.width + 20; my = Math.random() * canvas.height; }
+                monsters.push({ x: mx, y: my, size: 15, speed: 1.5 });
+            }
+        }, 1000);
+
+        socket.on('playerMove', (data) => {
+            otherPlayers[data.id] = { x: data.x, y: data.y, name: data.name };
+        });
+
+        socket.on('playerDisconnected', (id) => {
+            delete otherPlayers[id];
+        });
+
+        function update() {
+            if (!gameStarted) return;
+
+            // 키보드 이동
+            if (keys['ArrowUp'] || keys['w'] || keys['W']) myPlayer.y -= myPlayer.speed;
+            if (keys['ArrowDown'] || keys['s'] || keys['S']) myPlayer.y += myPlayer.speed;
+            if (keys['ArrowLeft'] || keys['a'] || keys['A']) myPlayer.x -= myPlayer.speed;
+            if (keys['ArrowRight'] || keys['d'] || keys['D']) myPlayer.x += myPlayer.speed;
+
+            // 터치 이동 (화면을 누르고 있는 곳으로 이동)
+            if (touchTarget) {
+                let dx = touchTarget.x - myPlayer.x;
+                let dy = touchTarget.y - myPlayer.y;
+                let dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist > myPlayer.speed) {
+                    myPlayer.x += (dx / dist) * myPlayer.speed;
+                    myPlayer.y += (dy / dist) * myPlayer.speed;
+                }
+            }
+
+            if (myPlayer.x < 20) myPlayer.x = 20;
+            if (myPlayer.x > canvas.width - 20) myPlayer.x = canvas.width - 20;
+            if (myPlayer.y < 20) myPlayer.y = 20;
+            if (myPlayer.y > canvas.height - 20) myPlayer.y = canvas.height - 20;
+
+            monsters.forEach(m => {
+                let dx = myPlayer.x - m.x;
+                let dy = myPlayer.y - m.y;
+                let dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist > 1) {
+                    m.x += (dx / dist) * m.speed;
+                    m.y += (dy / dist) * m.speed;
+                }
+                if (dist < myPlayer.size + m.size) {
+                    myPlayer.hp -= 0.3;
+                    if (myPlayer.hp < 0) myPlayer.hp = 0;
+                }
+            });
+
+            socket.emit('playerMove', { x: myPlayer.x, y: myPlayer.y, name: myPlayer.name });
+        }
+
+        function draw() {
+            ctx.fillStyle = '#121212';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = '#1a1a1a';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 40) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+            }
+
+            monsters.forEach(m => {
+                ctx.fillStyle = '#ff3333';
+                ctx.beginPath();
+                ctx.arc(m.x, m.y, m.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            for (let id in otherPlayers) {
+                let p = otherPlayers[id];
+                ctx.fillStyle = '#ffcc44';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, myPlayer.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#fff';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(p.name || '친구', p.x, p.y - 25);
+            }
+
+            ctx.fillStyle = myPlayer.color;
+            ctx.beginPath();
+            ctx.arc(myPlayer.x, myPlayer.y, myPlayer.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 13px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(myPlayer.name, myPlayer.x, myPlayer.y - 25);
+
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 15px Arial';
+            ctx.fillText(`체력(HP): ${Math.ceil(myPlayer.hp)}  |  점수: ${myPlayer.score}`, 20, 30);
+        }
+
+        function mainLoop() {
+            if (!gameStarted) return;
+            update();
+            draw();
+            requestAnimationFrame(mainLoop);
         }
     </script>
-
 </body>
 </html>
