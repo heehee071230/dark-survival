@@ -10,7 +10,8 @@ const io = new Server(server);
 
 app.use(express.static(path.join(__dirname, '../client')));
 
-const players = {};
+const players = {};          // socket.id 기준 플레이어 정보
+const activeUsers = {};      // username -> socket.id 매핑 (중복 로그인 방지용)
 
 io.on('connection', (socket) => {
     console.log(`새로운 유저 연결됨: ${socket.id}`);
@@ -40,6 +41,22 @@ io.on('connection', (socket) => {
             if (err) {
                 socket.emit('login_res', { success: false, message: err.message });
             } else {
+                // 🚀 이미 다른 곳에서 로그인되어 있는지 확인
+                if (activeUsers[username]) {
+                    const oldSocketId = activeUsers[username];
+                    const oldSocket = io.sockets.sockets.get(oldSocketId);
+                    
+                    if (oldSocket) {
+                        // 이전 접속자에게 중복 로그인 알림 전송
+                        oldSocket.emit('force_logout', '다른 기기(또는 다른 창)에서 로그인하여 연결이 끊어졌습니다.');
+                        oldSocket.disconnect();
+                    }
+                }
+
+                // 현재 소켓을 활성 유저로 등록
+                activeUsers[username] = socket.id;
+                socket.username = username; // 소켓 객체에 유저 이름 임시 저장
+
                 socket.emit('login_res', { success: true, username: user.username });
             }
         });
@@ -62,7 +79,6 @@ io.on('connection', (socket) => {
         players[socket.id].y = data.y;
 
         const currentMap = players[socket.id].mapId;
-        // 내 맵의 유저들에게 내 위치 전달
         io.to(currentMap).emit('update_players', getPlayersInMap(currentMap));
     });
 
@@ -84,7 +100,6 @@ io.on('connection', (socket) => {
     socket.on('chat_message', (msg) => {
         if (!players[socket.id]) return;
         const player = players[socket.id];
-        // 채팅은 전체 서버로 전송 (또는 맵별 전송 원하시면 변경 가능)
         io.emit('chat_message', {
             username: player.username,
             text: msg
@@ -92,6 +107,11 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
+        // 활성 유저 목록에서 제거
+        if (socket.username && activeUsers[socket.username] === socket.id) {
+            delete activeUsers[socket.username];
+        }
+
         if (players[socket.id]) {
             delete players[socket.id];
             broadcastAllPlayers();
@@ -110,13 +130,8 @@ function getPlayersInMap(mapId) {
     return mapPlayers;
 }
 
-// 모든 접속자의 전체 목록을 모든 클라이언트에 브로드캐스트
 function broadcastAllPlayers() {
     io.emit('update_all_players', players);
-    // 현재 맵에 있는 유저들 화면 갱신용
-    for (const socketId in io.sockets.sockets) {
-        // 소켓 방별 갱신
-    }
     io.sockets.sockets.forEach((sock) => {
         if (players[sock.id]) {
             sock.emit('update_players', getPlayersInMap(players[sock.id].mapId));
