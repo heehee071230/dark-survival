@@ -41,21 +41,19 @@ io.on('connection', (socket) => {
             if (err) {
                 socket.emit('login_res', { success: false, message: err.message });
             } else {
-                // 🚀 이미 다른 곳에서 로그인되어 있는지 확인
+                // 🚀 이미 다른 곳에서 로그인되어 있는지 확인하고 강제 퇴장
                 if (activeUsers[username]) {
                     const oldSocketId = activeUsers[username];
                     const oldSocket = io.sockets.sockets.get(oldSocketId);
                     
                     if (oldSocket) {
-                        // 이전 접속자에게 중복 로그인 알림 전송
                         oldSocket.emit('force_logout', '다른 기기(또는 다른 창)에서 로그인하여 연결이 끊어졌습니다.');
                         oldSocket.disconnect();
                     }
                 }
 
-                // 현재 소켓을 활성 유저로 등록
                 activeUsers[username] = socket.id;
-                socket.username = username; // 소켓 객체에 유저 이름 임시 저장
+                socket.username = username;
 
                 socket.emit('login_res', { success: true, username: user.username });
             }
@@ -107,7 +105,6 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-        // 활성 유저 목록에서 제거
         if (socket.username && activeUsers[socket.username] === socket.id) {
             delete activeUsers[socket.username];
         }
