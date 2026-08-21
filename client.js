@@ -25,11 +25,16 @@ const ctx = canvas.getContext('2d');
 let myUsername = '';
 let currentMap = 'map1';
 let players = {};
-let allPlayers = {}; // 전체 접속자 관리
+let allPlayers = {};
 let myPosition = { x: 100, y: 100 };
 let isUsernameChecked = false;
 
-// 섹션 접기/펼치기 토글 함수 (전역 등록)
+// 🚀 중복 로그인 감지 시 강제 새로고침
+socket.on('force_logout', (msg) => {
+    alert(msg);
+    location.reload();
+});
+
 function toggleSection(sectionId, headerEl) {
     const section = document.getElementById(sectionId);
     const arrow = headerEl.querySelector('span:last-child');
@@ -43,7 +48,6 @@ function toggleSection(sectionId, headerEl) {
 }
 window.toggleSection = toggleSection;
 
-// 탭 전환 함수 (전역 등록)
 function switchTab(tabName) {
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
@@ -58,7 +62,7 @@ function switchTab(tabName) {
         tabs[0].classList.add('active');
     } else {
         if (localStorage.getItem('game_registered') === 'true') {
-            authMsg.innerText = '이 기기에서는 이미 회원가입이 완료되었습니다. (기기당 1개 제한)';
+            authMsg.innerText = '이 기기에서는 이미 회원가입이 완료되었습니다.';
             authMsg.style.color = '#ff5252';
             return;
         }
@@ -198,12 +202,10 @@ socket.on('login_res', (res) => {
     }
 });
 
-// 현재 맵 내 플레이어 위치 동기화
 socket.on('update_players', (serverPlayers) => {
     players = serverPlayers;
 });
 
-// 🚀 전체 접속자 및 각 유저의 맵 정보 동기화
 socket.on('update_all_players', (serverAllPlayers) => {
     allPlayers = serverAllPlayers;
     
@@ -298,10 +300,4 @@ socket.on('chat_message', (data) => {
     p.innerHTML = `<strong>${data.username}:</strong> ${data.text}`;
     chatBox.appendChild(p);
     chatBox.scrollTop = chatBox.scrollHeight;
-});
-
-// 🚀 다른 기기/창에서 중복 로그인되어 강제 퇴장당했을 때 처리
-socket.on('force_logout', (msg) => {
-    alert(msg); // 경고창 띄우기
-    location.reload(); // 페이지 새로고침하여 로그인 화면으로 복귀
 });
