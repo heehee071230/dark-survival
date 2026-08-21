@@ -299,3 +299,9 @@ socket.on('chat_message', (data) => {
     chatBox.appendChild(p);
     chatBox.scrollTop = chatBox.scrollHeight;
 });
+
+// 🚀 다른 기기/창에서 중복 로그인되어 강제 퇴장당했을 때 처리
+socket.on('force_logout', (msg) => {
+    alert(msg); // 경고창 띄우기
+    location.reload(); // 페이지 새로고침하여 로그인 화면으로 복귀
+});
