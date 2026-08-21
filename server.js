@@ -41,7 +41,7 @@ io.on('connection', (socket) => {
             if (err) {
                 socket.emit('login_res', { success: false, message: err.message });
             } else {
-                // 🚀 이미 다른 곳에서 로그인되어 있는지 확인하고 강제 퇴장
+                // 🚀 이미 다른 곳에서 로그인되어 있다면 기존 연결 강제 퇴장
                 if (activeUsers[username]) {
                     const oldSocketId = activeUsers[username];
                     const oldSocket = io.sockets.sockets.get(oldSocketId);
@@ -136,7 +136,8 @@ function broadcastAllPlayers() {
     });
 }
 
-const PORT = 3000;
+// 🚀 Render(클라우드) 및 로컬 환경 모두 지원하는 포트 설정
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`서버가 정상적으로 실행되었습니다: http://localhost:${PORT}`);
+    console.log(`서버가 정상적으로 실행되었습니다. 포트: ${PORT}`);
 });
